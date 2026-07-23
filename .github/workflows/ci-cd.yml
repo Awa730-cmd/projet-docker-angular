@@ -1,0 +1,55 @@
+name: CI/CD Pipeline Angular to Docker Hub
+#1. Déclenchement automatique à chaque push sur main
+on:
+  push:
+    branches:
+      - main
+# 2. Environnement d'exécution
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    # 7. Notification Slack (Début de job)
+    steps:
+      - name: Slack Notification - Start
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Pipeline CI/CD Triggered"
+          SLACK_MESSAGE: "🚀 A new build of the Docker image is in progress for the main branch."
+          SLACK_COLOR: "warning"
+      # 3. Récupération du code source
+      
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      # 4. Préparation de l'outillage Docker (Buildx)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        
+        # 5. Authentification au registre Docker
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          
+       # 6. Construction et publication de l'image (avec les deux tags)
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            nahawa/projet-docker-angular:latest
+            nahawa/projet-docker-angular:${{ github.sha }}
+
+        # 7. Notification Slack (Succès)
+      - name: Slack Notification - Success
+        if: success()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+          SLACK_TITLE: "Deployment Successful!"
+          SLACK_MESSAGE: "The Docker image has been successfully published to Docker Hub.\n- Repository : ${{ github.repository }}\n- Branch : ${{ github.ref_name }}\n- Commit Tag : ${{ github.sha }}\n- Link : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          SLACK_COLOR: "good"
