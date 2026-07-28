@@ -16,8 +16,9 @@ jobs:
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_TITLE: "Pipeline CI/CD Triggered"
-          SLACK_MESSAGE: "🚀 A new build of the Docker image is in progress for the main branch."
+          SLACK_MESSAGE: " A new build of the Docker image is in progress for the main branch."
           SLACK_COLOR: "warning"
+          
       # 3. Récupération du code source
       
       - name: Checkout code
