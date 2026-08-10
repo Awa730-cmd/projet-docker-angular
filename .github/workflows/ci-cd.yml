@@ -8,22 +8,30 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    
-    # 7. Notification Slack (Début de job)
+
     steps:
+      # 1. Notification Slack (Début de job)
       - name: Slack Notification - Start
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
           SLACK_TITLE: "Pipeline CI/CD Triggered"
-          SLACK_MESSAGE: " A new build of the Docker image is in progress for the main branch."
+          SLACK_MESSAGE: "A new build of the Docker image is in progress for the main branch."
           SLACK_COLOR: "warning"
-          
-      # 3. Récupération du code source
-      
+
+      # 2. Récupération du code source
       - name: Checkout code
         uses: actions/checkout@v4
-        
+        with:
+          fetch-depth: 0          # Historique Git complet, requis par Sonar
+
+      # 3. Analyse SonarQube
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@v5
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
       # 4. Préparation de l'outillage Docker (Buildx)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
